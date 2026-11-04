@@ -70,14 +70,14 @@
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
       
       <!-- LOGO & SWITCHER -->
-      <div class="flex items-center gap-8">
+      <div class="flex items-center gap-6">
         <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20" id="logo-icon-bg">
             <i class="fa-solid fa-trophy text-white text-lg"></i>
           </div>
           <div>
             <h1 class="text-2xl font-bold leading-none tracking-wide">TWITCH<span class="text-orange-500" id="logo-sub">HUB</span></h1>
-            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Esports Tournament Platform</p>
+            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Esports Platform</p>
           </div>
         </div>
 
@@ -86,7 +86,7 @@
           <button id="btn-cs" onclick="switchGame('cs')" class="px-4 py-1.5 rounded-lg font-semibold text-xs transition-all bg-orange-500 text-white shadow-md flex items-center gap-2">
             <i class="fa-solid fa-crosshairs"></i> CS2
           </button>
-          <button id="btn-dota" onclick="switchGame('dota')" class="switch-game-btn px-4 py-1.5 rounded-lg font-semibold text-xs transition-all text-slate-400 hover:text-white flex items-center gap-2">
+          <button id="btn-dota" onclick="switchGame('dota')" class="px-4 py-1.5 rounded-lg font-semibold text-xs transition-all text-slate-400 hover:text-white flex items-center gap-2">
             <i class="fa-solid fa-shield-halved"></i> DOTA 2
           </button>
         </div>
@@ -94,18 +94,23 @@
 
       <!-- ACTIONS & PROFILE -->
       <div class="flex items-center gap-3">
-        <button onclick="openVetoModal()" class="glass-card px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2">
+        <button onclick="openVetoModal()" class="glass-card px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2">
           <i class="fa-solid fa-map text-orange-400"></i> Map Veto
         </button>
 
-        <button onclick="openObsModal()" class="glass-card px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2">
+        <button onclick="openObsModal()" class="glass-card px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2">
           <i class="fa-solid fa-display text-purple-400"></i> OBS Overlays
+        </button>
+
+        <button onclick="toggleLang()" class="glass-card px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5">
+          <i class="fa-solid fa-globe text-blue-400"></i> <span id="lang-label">UA</span>
         </button>
 
         <div class="h-6 w-[1px] bg-slate-800 mx-1"></div>
 
+        <!-- AUTH & PROFILE BUTTON -->
         <div id="auth-section">
-          <button onclick="loginTwitch()" class="btn-accent px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-orange-500/10">
+          <button onclick="loginTwitch()" class="btn-accent px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg">
             <i class="fa-brands fa-twitch text-sm"></i> Увійти через Twitch
           </button>
         </div>
@@ -132,6 +137,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+          <button onclick="startTournament()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition">
+            <i class="fa-solid fa-play"></i> Стартувати Турнір
+          </button>
           <button onclick="openProfileModal()" class="glass-card px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2">
             <i class="fa-solid fa-user-gear text-purple-400"></i> Мій Профіль
           </button>
@@ -252,9 +260,9 @@
       </button>
 
       <div class="flex items-center gap-4 border-b border-slate-800 pb-4">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl shadow-lg" id="profile-avatar-letter">H</div>
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl shadow-lg">H</div>
         <div>
-          <h3 class="text-2xl font-bold uppercase font-teko text-white" id="profile-username">hesherUA</h3>
+          <h3 class="text-2xl font-bold uppercase font-teko text-white" id="profile-username-display">hesherUA</h3>
           <span class="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase">Twitch Streamer</span>
         </div>
       </div>
@@ -365,12 +373,13 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE WITH STRICT VALIDATION -->
+  <!-- SCRIPT ENGINE -->
   <script>
     let currentGame = 'cs';
     let bracketSize = 8;
     let matchesState = JSON.parse(localStorage.getItem('twitch_hub_matches')) || {};
     let userProfile = JSON.parse(localStorage.getItem('twitch_hub_profile')) || { username: 'hesherUA', faceit: '', steam: '', cshunter: '' };
+    let currentLang = 'UA';
     
     let activeMatchId = null;
     let selectedMatchForModal = null;
@@ -393,6 +402,16 @@
         ? 'px-4 py-1.5 rounded-lg font-semibold text-xs transition-all bg-red-500 text-white shadow-md flex items-center gap-2'
         : 'px-4 py-1.5 rounded-lg font-semibold text-xs transition-all text-slate-400 hover:text-white flex items-center gap-2';
       document.getElementById('active-game-badge').textContent = isCs ? 'CS2 Competitive Hub' : 'Dota 2 Captains Mode';
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'UA' ? 'EN' : 'UA';
+      document.getElementById('lang-label').textContent = currentLang;
+      alert(currentLang === 'EN' ? 'Language switched to English (Mock)' : 'Мову переключено на українську');
+    }
+
+    function startTournament() {
+      alert('Турнір успішно стартував! Сітка заблокована для редагування складів.');
     }
 
     function renderBracket() {
@@ -552,13 +571,12 @@
       const cshunter = document.getElementById('input-cshunter').value.trim();
       const errBox = document.getElementById('profile-error-msg');
 
-      // Сувора перевірка регулярними виразами (Реальна валідація посилань)
       const faceitRegex = /^https:\/\/(www\.)?faceit\.com\/[a-z]{2}\/players\/[^\s]+$/i;
       const steamRegex = /^(https:\/\/(www\.)?steamcommunity\.com\/(id|profiles)\/[^\s]+|\d{17})$/i;
       const cshunterRegex = /^https:\/\/(www\.)?cshunter\.gg\/[^\s]+$/i;
 
       if (faceit && !faceitRegex.test(faceit)) {
-        errBox.textContent = "Помилка: Невірний формат FACEIT посилання (очікується https://www.faceit.com/en/players/особа)";
+        errBox.textContent = "Помилка: Невірний формат FACEIT посилання!";
         errBox.classList.remove('hidden');
         return;
       }
@@ -640,15 +658,17 @@
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function openObsModal() { document.getElementById('modal-obs').classList.remove('hidden'); }
+    
     function loginTwitch() {
       localStorage.setItem('twitch_hub_user', JSON.stringify({ username: 'hesherUA' }));
       document.getElementById('auth-section').innerHTML = `
-        <div class="glass-card px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white cursor-pointer" onclick="openProfileModal()">
+        <div class="glass-card px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white cursor-pointer hover:border-purple-500 transition" onclick="openProfileModal()">
           <div class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-[10px]">H</div>
           hesherUA
         </div>
       `;
     }
+
     function copyLink(id) {
       navigator.clipboard.writeText(document.getElementById(id).value);
       alert('Посилання скопійовано!');

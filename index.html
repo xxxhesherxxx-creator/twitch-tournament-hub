@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Twitch Tournament Hub | Elite Esports</title>
+  <title>Twitch Tournament Hub | Pro Esports Platform</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -35,7 +35,7 @@
     }
 
     .glass-panel {
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.75);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.07);
     }
@@ -86,7 +86,7 @@
           <button id="btn-cs" onclick="switchGame('cs')" class="px-4 py-1.5 rounded-lg font-semibold text-xs transition-all bg-orange-500 text-white shadow-md flex items-center gap-2">
             <i class="fa-solid fa-crosshairs"></i> CS2
           </button>
-          <button id="btn-dota" onclick="switchGame('dota')" class="px-4 py-1.5 rounded-lg font-semibold text-xs transition-all text-slate-400 hover:text-white flex items-center gap-2">
+          <button id="btn-dota" onclick="switchGame('dota')" class="switch-game-btn px-4 py-1.5 rounded-lg font-semibold text-xs transition-all text-slate-400 hover:text-white flex items-center gap-2">
             <i class="fa-solid fa-shield-halved"></i> DOTA 2
           </button>
         </div>
@@ -132,8 +132,8 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <button onclick="openManualDraftModal()" class="glass-card px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2">
-            <i class="fa-solid fa-users-gear text-orange-400"></i> Команди & Посів
+          <button onclick="openProfileModal()" class="glass-card px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2">
+            <i class="fa-solid fa-user-gear text-purple-400"></i> Мій Профіль
           </button>
           <button onclick="autoBalanceTeams()" class="btn-accent px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Автобаланс
@@ -172,15 +172,6 @@
               </select>
             </div>
 
-            <div>
-              <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">Формат фіналу</label>
-              <select class="w-full bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500 transition">
-                <option value="bo3" selected>Best of 3 (Bo3)</option>
-                <option value="bo1">Best of 1 (Bo1)</option>
-                <option value="bo5">Best of 5 (Bo5)</option>
-              </select>
-            </div>
-
             <button onclick="resetBracketData()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2.5 rounded-xl text-xs font-semibold transition">
               Скинути сітку
             </button>
@@ -197,14 +188,17 @@
           </div>
 
           <div class="text-xs text-slate-400 bg-slate-900/50 p-3 rounded-xl border border-slate-800/60" id="active-match-bet-info">
-            Оберіть матч у сітці, щоб відкрити приймання балів каналу.
+            Оберіть матч у сітці, щоб відкрити приймання ставок.
           </div>
 
           <div class="space-y-3" id="betting-form-container" style="display: none;">
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs font-semibold">
                 <span id="bet-t1-label" class="text-slate-200">Team 1</span>
-                <span class="text-orange-400">Пул: <span id="pool-t1">0</span></span>
+                <div>
+                  <span class="text-orange-400 font-bold" id="coeff-t1">x1.00</span>
+                  <span class="text-slate-400 text-[10px] ml-1">(пул: <span id="pool-t1">0</span>)</span>
+                </div>
               </div>
               <div class="flex gap-2">
                 <input type="number" id="input-bet-t1" placeholder="Бали..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
@@ -215,7 +209,10 @@
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs font-semibold">
                 <span id="bet-t2-label" class="text-slate-200">Team 2</span>
-                <span class="text-orange-400">Пул: <span id="pool-t2">0</span></span>
+                <div>
+                  <span class="text-orange-400 font-bold" id="coeff-t2">x1.00</span>
+                  <span class="text-slate-400 text-[10px] ml-1">(пул: <span id="pool-t2">0</span>)</span>
+                </div>
               </div>
               <div class="flex gap-2">
                 <input type="number" id="input-bet-t2" placeholder="Бали..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none">
@@ -240,14 +237,52 @@
           </div>
 
           <!-- BRACKET CONTAINER -->
-          <div id="bracket-tree" class="flex gap-8 justify-around items-center min-w-[700px] py-4 flex-grow">
-            <!-- Rendered dynamically -->
-          </div>
+          <div id="bracket-tree" class="flex gap-8 justify-around items-center min-w-[700px] py-4 flex-grow"></div>
         </div>
       </section>
 
     </div>
   </main>
+
+  <!-- PROFILE MODAL WITH STRICT VALIDATION -->
+  <div id="modal-profile" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-slate-800 space-y-6 relative shadow-2xl">
+      <button onclick="closeModal('modal-profile')" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center gap-4 border-b border-slate-800 pb-4">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl shadow-lg" id="profile-avatar-letter">H</div>
+        <div>
+          <h3 class="text-2xl font-bold uppercase font-teko text-white" id="profile-username">hesherUA</h3>
+          <span class="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase">Twitch Streamer</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase block mb-1">FACEIT Profile URL</label>
+          <input type="text" id="input-faceit" placeholder="https://www.faceit.com/en/players/username" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase block mb-1">Steam ID64 / Profile Link</label>
+          <input type="text" id="input-steam" placeholder="https://steamcommunity.com/id/... або 76561198..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-400 uppercase block mb-1">CSHunter / Match Link</label>
+          <input type="text" id="input-cshunter" placeholder="https://cshunter.gg/player/..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div id="profile-error-msg" class="text-xs text-red-400 font-semibold hidden"></div>
+
+        <button onclick="saveAndValidateProfile()" class="w-full btn-accent py-2.5 rounded-xl text-xs font-bold shadow-lg">
+          Зберегти профіль та перевірити посилання
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MATCH RESULT MODAL -->
   <div id="modal-match" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
@@ -330,11 +365,13 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE -->
+  <!-- SCRIPT ENGINE WITH STRICT VALIDATION -->
   <script>
     let currentGame = 'cs';
     let bracketSize = 8;
     let matchesState = JSON.parse(localStorage.getItem('twitch_hub_matches')) || {};
+    let userProfile = JSON.parse(localStorage.getItem('twitch_hub_profile')) || { username: 'hesherUA', faceit: '', steam: '', cshunter: '' };
+    
     let activeMatchId = null;
     let selectedMatchForModal = null;
 
@@ -434,13 +471,11 @@
     }
 
     function declareWinner(teamNum) {
-      if (!selectedMatchForModal) return;
-      if (!matchesState[selectedMatchForModal]) return;
+      if (!selectedMatchForModal || !matchesState[selectedMatchForModal]) return;
 
       matchesState[selectedMatchForModal].winner = teamNum;
       const winnerName = teamNum === 1 ? matchesState[selectedMatchForModal].t1 : matchesState[selectedMatchForModal].t2;
 
-      // Advance to next round
       const [rStr, mStr] = selectedMatchForModal.split('-M');
       const roundNum = parseInt(rStr.replace('R', ''));
       const matchNum = parseInt(mStr);
@@ -462,30 +497,92 @@
     function activateMatchForBetting() {
       if (!selectedMatchForModal) return;
       activeMatchId = selectedMatchForModal;
+      updateBettingUI();
+      closeModal('modal-match');
+    }
+
+    function updateBettingUI() {
+      if (!activeMatchId || !matchesState[activeMatchId]) return;
       const mData = matchesState[activeMatchId];
 
       document.getElementById('active-match-bet-info').textContent = `Активний матч: ${mData.t1} vs ${mData.t2}`;
       document.getElementById('bet-t1-label').textContent = mData.t1;
       document.getElementById('bet-t2-label').textContent = mData.t2;
-      document.getElementById('pool-t1').textContent = mData.pool1 || 0;
-      document.getElementById('pool-t2').textContent = mData.pool2 || 0;
+      
+      const pool1 = mData.pool1 || 0;
+      const pool2 = mData.pool2 || 0;
+      const total = pool1 + pool2;
+
+      document.getElementById('pool-t1').textContent = pool1;
+      document.getElementById('pool-t2').textContent = pool2;
+
+      document.getElementById('coeff-t1').textContent = total > 0 && pool1 > 0 ? `x${(total/pool1).toFixed(2)}` : 'x1.00';
+      document.getElementById('coeff-t2').textContent = total > 0 && pool2 > 0 ? `x${(total/pool2).toFixed(2)}` : 'x1.00';
       document.getElementById('betting-form-container').style.display = 'block';
-      closeModal('modal-match');
     }
 
     function placeBet(teamNum) {
       if (!activeMatchId || !matchesState[activeMatchId]) return;
       const input = document.getElementById(`input-bet-t${teamNum}`);
       const val = parseInt(input.value);
-      if (!val || val <= 0) return alert('Введіть коректну кількість балів!');
+      
+      if (!val || val <= 0) return alert('Введіть коректну суму балів!');
+      if (val > 50000) return alert('Максимальна ставка — 50,000 балів!');
 
       if (teamNum === 1) matchesState[activeMatchId].pool1 = (matchesState[activeMatchId].pool1 || 0) + val;
       else matchesState[activeMatchId].pool2 = (matchesState[activeMatchId].pool2 || 0) + val;
 
       localStorage.setItem('twitch_hub_matches', JSON.stringify(matchesState));
-      document.getElementById(`pool-t${teamNum}`).textContent = matchesState[activeMatchId][`pool${teamNum}`];
       input.value = '';
-      alert('Ставку успішно прийнято!');
+      updateBettingUI();
+    }
+
+    // PROFILE & STRICT URL VALIDATION
+    function openProfileModal() {
+      document.getElementById('input-faceit').value = userProfile.faceit || '';
+      document.getElementById('input-steam').value = userProfile.steam || '';
+      document.getElementById('input-cshunter').value = userProfile.cshunter || '';
+      document.getElementById('profile-error-msg').classList.add('hidden');
+      document.getElementById('modal-profile').classList.remove('hidden');
+    }
+
+    function saveAndValidateProfile() {
+      const faceit = document.getElementById('input-faceit').value.trim();
+      const steam = document.getElementById('input-steam').value.trim();
+      const cshunter = document.getElementById('input-cshunter').value.trim();
+      const errBox = document.getElementById('profile-error-msg');
+
+      // Сувора перевірка регулярними виразами (Реальна валідація посилань)
+      const faceitRegex = /^https:\/\/(www\.)?faceit\.com\/[a-z]{2}\/players\/[^\s]+$/i;
+      const steamRegex = /^(https:\/\/(www\.)?steamcommunity\.com\/(id|profiles)\/[^\s]+|\d{17})$/i;
+      const cshunterRegex = /^https:\/\/(www\.)?cshunter\.gg\/[^\s]+$/i;
+
+      if (faceit && !faceitRegex.test(faceit)) {
+        errBox.textContent = "Помилка: Невірний формат FACEIT посилання (очікується https://www.faceit.com/en/players/особа)";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (steam && !steamRegex.test(steam)) {
+        errBox.textContent = "Помилка: Невірний Steam ID64 або посилання на профіль Steam!";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (cshunter && !cshunterRegex.test(cshunter)) {
+        errBox.textContent = "Помилка: Невірне посилання на CSHunter!";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      userProfile.faceit = faceit;
+      userProfile.steam = steam;
+      userProfile.cshunter = cshunter;
+      localStorage.setItem('twitch_hub_profile', JSON.stringify(userProfile));
+      
+      errBox.classList.add('hidden');
+      alert("Профіль успішно збережено та перевірено!");
+      closeModal('modal-profile');
     }
 
     // MAP VETO
@@ -543,11 +640,10 @@
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function openObsModal() { document.getElementById('modal-obs').classList.remove('hidden'); }
-    function openManualDraftModal() { alert('Використовуйте кнопку Автобаланс для швидкого створення тестових команд.'); }
     function loginTwitch() {
       localStorage.setItem('twitch_hub_user', JSON.stringify({ username: 'hesherUA' }));
       document.getElementById('auth-section').innerHTML = `
-        <div class="glass-card px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white">
+        <div class="glass-card px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white cursor-pointer" onclick="openProfileModal()">
           <div class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-[10px]">H</div>
           hesherUA
         </div>
@@ -559,6 +655,9 @@
     }
 
     // Init
+    if (localStorage.getItem('twitch_hub_user')) {
+      loginTwitch();
+    }
     renderBracket();
   </script>
 </body>

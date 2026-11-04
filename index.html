@@ -57,7 +57,7 @@
 
     .accent-bg { background-color: var(--accent); }
     .accent-color { color: var(--accent); }
-    .accent-border { border-color: var(--accent-border); }
+    .accent-border { border-color: var(--card-border); }
     
     .card-custom {
       background: var(--card-bg);
@@ -78,12 +78,12 @@
 
     .map-card-banned {
       filter: grayscale(100%);
-      opacity: 0.4;
+      opacity: 0.3;
       border-color: #ef4444 !important;
     }
     .map-card-picked {
       border-color: #22c55e !important;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
     }
   </style>
 </head>
@@ -95,11 +95,11 @@
       
       <!-- LOGO & GAME TOGGLE -->
       <div class="flex items-center gap-6">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
           <i id="game-icon" class="fa-solid fa-crosshairs text-3xl accent-color"></i>
           <div>
             <h1 class="text-3xl font-bold leading-none uppercase tracking-wider">TWITCH <span class="accent-color">HUB PRO</span></h1>
-            <p class="text-xs text-gray-400 font-medium">Streamer Esports Platform</p>
+            <p class="text-xs text-gray-400 font-medium">Interactive Esports Platform</p>
           </div>
         </div>
 
@@ -210,11 +210,9 @@
             <div>
               <label class="text-xs text-gray-400 font-bold uppercase block mb-1" data-i18n="bracket_size">Кількість команд</label>
               <select id="bracket-size-select" onchange="updateBracketSize(this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none accent-border">
-                <option value="4" data-i18n="opt_4_teams">4 Команди</option>
-                <option value="8" selected data-i18n="opt_8_teams">8 Команд</option>
-                <option value="16" data-i18n="opt_16_teams">16 Команд</option>
-                <option value="32" data-i18n="opt_32_teams">32 Команди</option>
-                <option value="64" data-i18n="opt_64_teams">64 Команди</option>
+                <option value="4">4 Команди</option>
+                <option value="8" selected>8 Команд</option>
+                <option value="16">16 Команд</option>
               </select>
             </div>
 
@@ -228,16 +226,6 @@
             </div>
 
             <div>
-              <label class="text-xs text-gray-400 font-bold uppercase block mb-1" data-i18n="seeding_type">Тип автобалансу</label>
-              <select class="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none accent-border">
-                <option value="fair" data-i18n="opt_fair_elo">⚖️ Баланс середнього Elo</option>
-                <option value="random" data-i18n="opt_random">🎲 Випадковий посів</option>
-                <option value="captain" data-i18n="opt_captain">👑 Посів капітанів</option>
-                <option value="seeded" data-i18n="opt_seeded">⚔️ Сильний проти слабкого</option>
-              </select>
-            </div>
-
-            <div>
               <label class="text-xs text-gray-400 font-bold uppercase block mb-1" data-i18n="match_format">Формат фіналу</label>
               <select class="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-sm text-white focus:outline-none accent-border">
                 <option value="bo1">Best of 1 (Bo1)</option>
@@ -246,9 +234,12 @@
               </select>
             </div>
 
-            <button onclick="autoBalanceTeams()" class="w-full btn-primary py-2 rounded-md text-sm font-bold flex items-center justify-center gap-2 mt-2">
+            <button onclick="autoBalanceTeams()" class="w-full btn-primary py-2.5 rounded-md text-sm font-bold flex items-center justify-center gap-2 mt-2">
               <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <span data-i18n="btn_autobalance">Згенерувати Команди</span>
+              <span>Заповнити тестовими командами</span>
+            </button>
+            <button onclick="resetBracketData()" class="w-full bg-red-900/40 hover:bg-red-800/60 text-red-200 py-2 rounded-md text-xs font-bold border border-red-800/50">
+              Скинути сітку
             </button>
           </div>
         </div>
@@ -266,11 +257,12 @@
       </aside>
 
       <section class="lg:col-span-3 space-y-6">
+        <!-- BRACKET VIEW -->
         <div class="card-custom rounded-xl p-6 border border-gray-800 overflow-x-auto">
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
             <div>
               <h3 class="text-3xl font-bold uppercase" data-i18n="bracket_title">Турнірна Сітка</h3>
-              <p class="text-xs text-gray-400" data-i18n="bracket_subtitle">Оберіть матч для перегляду деталей або оголошення результату</p>
+              <p class="text-xs text-gray-400" data-i18n="bracket_subtitle">Клікніть на матч, щоб встановити рахунок або оголосити переможця</p>
             </div>
             <div class="flex gap-2">
               <button id="btn-single-elim" onclick="setBracketType('single')" class="bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-200 border border-gray-700" data-i18n="single_elim">Single Elimination</button>
@@ -278,46 +270,47 @@
             </div>
           </div>
 
-          <div id="bracket-tree" class="flex flex-col gap-8 min-w-[700px]"></div>
+          <div id="bracket-tree" class="flex gap-8 justify-between min-w-[700px] py-2"></div>
         </div>
 
+        <!-- BETTING SECTION -->
         <div class="card-custom rounded-xl p-6 border border-gray-800">
           <div class="flex flex-wrap justify-between items-center mb-4 pb-3 border-b border-gray-800">
             <div class="flex items-center gap-3">
               <i class="fa-solid fa-coins text-2xl text-yellow-500"></i>
               <div>
                 <h3 class="text-2xl font-bold uppercase" data-i18n="betting_title">Ставки на Бали Каналу</h3>
-                <p class="text-xs text-gray-400" data-i18n="betting_subtitle">Став свої бали Twitch на переможця активного матчу</p>
+                <p class="text-xs text-gray-400" data-i18n="betting_subtitle">Оберіть матч у сітці для відкриття ставок</p>
               </div>
             </div>
-            <div class="bg-gray-800 text-gray-400 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-gray-700">
-              <i class="fa-solid fa-info-circle"></i>
-              <span data-i18n="betting_status_neutral">Очікування активного матчу</span>
+            <div id="betting-status" class="bg-gray-800 text-orange-400 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-gray-700">
+              <i class="fa-solid fa-gamepad"></i>
+              <span id="active-match-title">Матч не обрано</span>
             </div>
           </div>
 
-          <div id="betting-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-50 pointer-events-none">
+          <div id="betting-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-gray-900/80 p-4 rounded-lg border border-gray-800">
               <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-lg text-gray-300">Team #1</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-400">1.00x</span>
+                <span id="bet-team1-name" class="font-bold text-lg text-white">Team #1</span>
+                <span id="bet-team1-coeff" class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-orange-400">x1.95</span>
               </div>
-              <p class="text-xs text-gray-500 mb-3"><span data-i18n="pool">Пул балів</span>: 0</p>
+              <p class="text-xs text-gray-400 mb-3">Пул: <span id="bet-team1-pool" class="text-white font-bold">0</span> балів</p>
               <div class="flex gap-2">
-                <input type="number" disabled placeholder="0" class="bg-gray-950 border border-gray-700 rounded px-3 py-1.5 text-sm w-full">
-                <button disabled class="btn-primary px-4 py-1.5 rounded text-sm font-bold" data-i18n="btn_bet">Поставити</button>
+                <input type="number" id="bet-team1-input" placeholder="Сума балів..." class="bg-gray-950 border border-gray-700 rounded px-3 py-1.5 text-sm w-full text-white focus:outline-none">
+                <button onclick="placeBet(1)" class="btn-primary px-4 py-1.5 rounded text-sm font-bold">Поставити</button>
               </div>
             </div>
 
             <div class="bg-gray-900/80 p-4 rounded-lg border border-gray-800">
               <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-lg text-gray-300">Team #2</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-400">1.00x</span>
+                <span id="bet-team2-name" class="font-bold text-lg text-white">Team #2</span>
+                <span id="bet-team2-coeff" class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-orange-400">x1.95</span>
               </div>
-              <p class="text-xs text-gray-500 mb-3"><span data-i18n="pool">Пул балів</span>: 0</p>
+              <p class="text-xs text-gray-400 mb-3">Пул: <span id="bet-team2-pool" class="text-white font-bold">0</span> балів</p>
               <div class="flex gap-2">
-                <input type="number" disabled placeholder="0" class="bg-gray-950 border border-gray-700 rounded px-3 py-1.5 text-sm w-full">
-                <button disabled class="btn-primary px-4 py-1.5 rounded text-sm font-bold" data-i18n="btn_bet">Поставити</button>
+                <input type="number" id="bet-team2-input" placeholder="Сума балів..." class="bg-gray-950 border border-gray-700 rounded px-3 py-1.5 text-sm w-full text-white focus:outline-none">
+                <button onclick="placeBet(2)" class="btn-primary px-4 py-1.5 rounded text-sm font-bold">Поставити</button>
               </div>
             </div>
           </div>
@@ -328,6 +321,34 @@
   </main>
 
   <!-- MODALS -->
+
+  <!-- MATCH RESULT MODAL -->
+  <div id="modal-match-result" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="card-custom rounded-xl max-w-md w-full p-6 border border-gray-800 relative">
+      <button onclick="closeModal('modal-match-result')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h3 class="text-2xl font-bold uppercase mb-1 accent-color" id="modal-match-header">Результат Матчу</h3>
+      <p class="text-xs text-gray-400 mb-6">Оберіть переможця або вкажіть точний рахунок карт</p>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-3 bg-gray-900 rounded border border-gray-800">
+          <span id="modal-t1-name" class="font-bold text-white text-base">Team 1</span>
+          <button onclick="setWinner(1)" class="btn-primary px-4 py-1.5 rounded text-xs font-bold">Переможець 🏆</button>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-gray-900 rounded border border-gray-800">
+          <span id="modal-t2-name" class="font-bold text-white text-base">Team 2</span>
+          <button onclick="setWinner(2)" class="btn-primary px-4 py-1.5 rounded text-xs font-bold">Переможець 🏆</button>
+        </div>
+
+        <button onclick="setActiveBetMatch()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded text-xs transition">
+          <i class="fa-solid fa-coins mr-1"></i> Зробити цей матч активним для ставок
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MAP VETO MODAL -->
   <div id="modal-veto" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
@@ -348,9 +369,7 @@
         Хід: Team #1 банить карту
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6" id="veto-maps-container">
-        <!-- Rendered by JS -->
-      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6" id="veto-maps-container"></div>
 
       <div class="bg-gray-950 p-4 rounded-lg border border-gray-900">
         <h4 class="text-xs font-bold uppercase text-gray-400 mb-2">Історія Вето (Veto Log):</h4>
@@ -375,7 +394,7 @@
         <div class="bg-gray-900 p-3 rounded border border-gray-800">
           <div class="text-xs font-bold text-white mb-1">1. Віджет Турнірної Сітки (Full Bracket)</div>
           <div class="flex gap-2">
-            <input type="text" readonly id="obs-url-bracket" class="w-full bg-gray-950 text-xs text-gray-400 p-2 rounded border border-gray-800" value="https://site.com/overlay/bracket">
+            <input type="text" readonly id="obs-url-bracket" class="w-full bg-gray-950 text-xs text-gray-400 p-2 rounded border border-gray-800" value="https://xxxhesherxxx-creator.github.io/twitch-tournament-hub/?overlay=bracket">
             <button onclick="copyToClipboard('obs-url-bracket')" class="btn-primary px-3 text-xs rounded">Copy</button>
           </div>
         </div>
@@ -383,16 +402,8 @@
         <div class="bg-gray-900 p-3 rounded border border-gray-800">
           <div class="text-xs font-bold text-white mb-1">2. Віджет Поточного Матчу (Match HUD)</div>
           <div class="flex gap-2">
-            <input type="text" readonly id="obs-url-match" class="w-full bg-gray-950 text-xs text-gray-400 p-2 rounded border border-gray-800" value="https://site.com/overlay/match">
+            <input type="text" readonly id="obs-url-match" class="w-full bg-gray-950 text-xs text-gray-400 p-2 rounded border border-gray-800" value="https://xxxhesherxxx-creator.github.io/twitch-tournament-hub/?overlay=match">
             <button onclick="copyToClipboard('obs-url-match')" class="btn-primary px-3 text-xs rounded">Copy</button>
-          </div>
-        </div>
-
-        <div class="bg-gray-900 p-3 rounded border border-gray-800">
-          <div class="text-xs font-bold text-white mb-1">3. Віджет Ставок Глядачів (Live Bets)</div>
-          <div class="flex gap-2">
-            <input type="text" readonly id="obs-url-bets" class="w-full bg-gray-950 text-xs text-gray-400 p-2 rounded border border-gray-800" value="https://site.com/overlay/bets">
-            <button onclick="copyToClipboard('obs-url-bets')" class="btn-primary px-3 text-xs rounded">Copy</button>
           </div>
         </div>
       </div>
@@ -418,11 +429,6 @@
         </div>
         <div class="bg-gray-900 p-3 rounded border border-gray-800">
           <span class="font-bold text-orange-400">!ставка [команда] [бали]</span> — Зробити ставку прямо з чату Twitch
-        </div>
-
-        <div class="pt-2">
-          <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Streamer.bot Webhook URL</label>
-          <input type="text" placeholder="http://localhost:8080/webhook/tournament" class="w-full bg-gray-950 p-2 rounded border border-gray-800 text-white focus:outline-none">
         </div>
       </div>
     </div>
@@ -458,13 +464,6 @@
               <td class="p-2 text-green-400">12</td>
               <td class="p-2 font-bold text-orange-400">2450</td>
             </tr>
-            <tr>
-              <td class="p-2 font-bold text-gray-400">2</td>
-              <td class="p-2 font-bold text-white">s1mple_fan</td>
-              <td class="p-2">10</td>
-              <td class="p-2 text-green-400">6</td>
-              <td class="p-2 font-bold text-orange-400">1820</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -490,21 +489,6 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <div class="bg-gray-900/80 p-3 rounded-lg border border-gray-800 text-center">
-          <div class="text-xs text-gray-400 font-bold uppercase">Зіграно турнірів</div>
-          <div id="stat-tourneys-played" class="text-2xl font-bold text-white mt-1">0</div>
-        </div>
-        <div class="bg-gray-900/80 p-3 rounded-lg border border-gray-800 text-center">
-          <div class="text-xs text-gray-400 font-bold uppercase">Перемоги (Win Rate)</div>
-          <div id="stat-win-rate" class="text-2xl font-bold text-green-400 mt-1">0%</div>
-        </div>
-        <div class="bg-gray-900/80 p-3 rounded-lg border border-gray-800 text-center">
-          <div class="text-xs text-gray-400 font-bold uppercase">Організовано</div>
-          <div id="stat-tourneys-hosted" class="text-2xl font-bold text-orange-400 mt-1">0</div>
-        </div>
-      </div>
-
       <form onsubmit="saveProfileSettings(event)" class="space-y-4">
         <h4 class="text-lg font-bold uppercase border-b border-gray-800 pb-2 accent-color flex items-center gap-2">
           <i class="fa-solid fa-link"></i> Прив'язка ігрових акаунтів & Соцмереж
@@ -524,27 +508,11 @@
             </label>
             <input type="text" id="prof-steam" placeholder="76561198..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none accent-border">
           </div>
-
-          <div>
-            <label class="text-xs font-bold text-gray-400 uppercase block mb-1">
-              <i class="fa-solid fa-shield-halved mr-1 text-red-500"></i> CSHunter Profile Link
-            </label>
-            <input type="text" id="prof-cshunter" placeholder="https://cshunter.gg/player/..." class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none accent-border">
-          </div>
-
-          <div>
-            <label class="text-xs font-bold text-gray-400 uppercase block mb-1">
-              <i class="fa-brands fa-telegram mr-1 text-blue-500"></i> Telegram Нікнейм
-            </label>
-            <input type="text" id="prof-tg" placeholder="@nickname" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none accent-border">
-          </div>
         </div>
 
         <div class="pt-4 flex justify-end gap-3 border-t border-gray-800">
           <button type="button" onclick="closeModal('modal-profile')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold px-4 py-2 rounded text-sm">Скасувати</button>
-          <button type="submit" class="btn-primary px-6 py-2 rounded text-sm font-bold flex items-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i> Зберегти налаштування
-          </button>
+          <button type="submit" class="btn-primary px-6 py-2 rounded text-sm font-bold">Зберегти налаштування</button>
         </div>
       </form>
     </div>
@@ -558,14 +526,9 @@
       </button>
 
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
-        <h3 class="text-3xl font-bold uppercase" data-i18n="manual_draft_title">Ручний Менеджмент Команд</h3>
-        <button onclick="sortRegisteredByElo()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 border border-gray-700">
-          <i class="fa-solid fa-arrow-down-wide-short"></i>
-          <span data-i18n="btn_sort_elo">Сортувати за Elo/MMR</span>
-        </button>
+        <h3 class="text-3xl font-bold uppercase">Ручний Менеджмент Команд</h3>
       </div>
 
-      <p class="text-xs text-gray-400 mb-6" data-i18n="manual_draft_desc">Тут ви можете вручну розподілити гравців по командах або змінити назви складів.</p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="manual-teams-container"></div>
     </div>
   </div>
@@ -578,250 +541,167 @@
       </button>
       
       <h3 class="text-3xl font-bold uppercase mb-4" data-i18n="match_stats">Історія Матчів & Статистика</h3>
-      
-      <div class="bg-gray-900 p-4 rounded-lg mb-6 border border-gray-800">
-        <label class="text-xs text-gray-400 font-bold uppercase block mb-1" data-i18n="import_label">Імпорт за посиланням з CSHunter / Faceit / Match ID</label>
-        <div class="flex gap-2">
-          <input type="text" placeholder="https://cshunter.gg/match/..." class="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
-          <button onclick="importMatchData()" class="btn-primary px-4 py-2 rounded text-sm font-bold" data-i18n="btn_import">Імпортувати</button>
-        </div>
-      </div>
-
       <div class="text-center py-8 text-gray-500 text-sm italic" data-i18n="no_stats">
         Матчі ще не зіграні. Статистика з'явиться після закінчення першої карти або імпорту.
       </div>
     </div>
   </div>
 
-  <!-- SCRIPT LOGIC -->
+  <!-- DYNAMIC BRACKET & INTERACTIVE SCRIPT LOGIC -->
   <script>
     const TWITCH_CLIENT_ID = "YOUR_TWITCH_CLIENT_ID"; 
     const REDIRECT_URI = window.location.origin + window.location.pathname;
 
+    let currentBracketSize = 8;
+    let bracketType = "single";
+    let activeMatchForBets = null;
+
+    // Bracket State Data
+    let matchesData = JSON.parse(localStorage.getItem('tournament_matches')) || {};
+
     const csMaps = ["de_mirage", "de_inferno", "de_nuke", "de_anubis", "de_ancient", "de_dust2", "de_vertigo"];
     let vetoState = { turn: 1, banned: [], picked: [] };
 
-    const i18n = {
-      uk: {
-        login: "Увійти через Twitch",
-        logout: "Вийти",
-        my_profile: "Мій Профіль",
-        my_tournaments: "Мої Турніри",
-        tourney_default_title: "Турнір Стрімера",
-        tourney_default_desc: "Автобаланс по Elo/MMR | Налаштовувана сітка | Ставки для глядачів",
-        manual_draft: "Склад команд & Посів",
-        match_stats: "Статистика",
-        format_settings: "Налаштування",
-        bracket_size: "Кількість команд",
-        game_mode: "Режим гри",
-        seeding_type: "Тип автобалансу",
-        match_format: "Формат фіналу",
-        btn_autobalance: "Згенерувати Команди",
-        subs_bench: "Резервна Лава",
-        subs_desc: "Учасники для заміни при відсутності основних гравців.",
-        no_subs: "Немає резервних гравців",
-        bracket_title: "Турнірна Сітка",
-        bracket_subtitle: "Оберіть матч для перегляду деталей або оголошення результату",
-        single_elim: "Single Elimination",
-        double_elim: "Double Elimination",
-        betting_title: "Ставки на Бали Каналу",
-        betting_subtitle: "Став свої бали Twitch на переможця активного матчу",
-        betting_status_neutral: "Очікування активного матчу",
-        pool: "Пул балів",
-        btn_bet: "Поставити",
-        manual_draft_title: "Ручний Менеджмент Команд",
-        btn_sort_elo: "Сортувати за Elo/MMR",
-        manual_draft_desc: "Тут ви можете вручну розподілити гравців по командах або змінити назви складів.",
-        import_label: "Імпорт за посиланням з CSHunter / Faceit / Match ID",
-        btn_import: "Імпортувати",
-        no_stats: "Матчі ще не зіграні. Статистика з'явиться після закінчення першої карти або імпорту.",
-        opt_4_teams: "4 Команди",
-        opt_8_teams: "8 Команд",
-        opt_16_teams: "16 Команд",
-        opt_32_teams: "32 Команди",
-        opt_64_teams: "64 Команди",
-        opt_fair_elo: "⚖️ Баланс середнього Elo",
-        opt_random: "🎲 Випадковий посів",
-        opt_captain: "👑 Посів капітанів",
-        opt_seeded: "⚔️ Сильний проти слабкого",
-        tbd: "Очікується"
-      },
-      en: {
-        login: "Login with Twitch",
-        logout: "Logout",
-        my_profile: "My Profile",
-        my_tournaments: "My Tournaments",
-        tourney_default_title: "Streamer Tournament",
-        tourney_default_desc: "Auto-balance by Elo/MMR | Customizable bracket | Viewer channel point bets",
-        manual_draft: "Teams & Seeding",
-        match_stats: "Statistics",
-        format_settings: "Format Settings",
-        bracket_size: "Bracket Size",
-        game_mode: "Game Mode",
-        seeding_type: "Auto-Balance Type",
-        match_format: "Finals Format",
-        btn_autobalance: "Generate Balanced Teams",
-        subs_bench: "Subs Reserve",
-        subs_desc: "Players available for replacements if any main player drops.",
-        no_subs: "No substitute players",
-        bracket_title: "Tournament Bracket",
-        bracket_subtitle: "Click a match to view details or report score",
-        single_elim: "Single Elimination",
-        double_elim: "Double Elimination",
-        betting_title: "Channel Points Betting",
-        betting_subtitle: "Bet your Twitch points on active match winners",
-        betting_status_neutral: "Waiting for active match",
-        pool: "Points Pool",
-        btn_bet: "Place Bet",
-        manual_draft_title: "Manual Team Management",
-        btn_sort_elo: "Sort by Elo/MMR",
-        manual_draft_desc: "Manually adjust rosters, move players, or change team names.",
-        import_label: "Import via CSHunter / Faceit link / Match ID",
-        btn_import: "Import Data",
-        no_stats: "No matches played yet. Stats will appear after the first map or import.",
-        opt_4_teams: "4 Teams",
-        opt_8_teams: "8 Teams",
-        opt_16_teams: "16 Teams",
-        opt_32_teams: "32 Teams",
-        opt_64_teams: "64 Teams",
-        opt_fair_elo: "⚖️ Fair Elo Average Balance",
-        opt_random: "🎲 Pure Random",
-        opt_captain: "👑 Captain Draft",
-        opt_seeded: "⚔️ High-vs-Low (Seeded)",
-        tbd: "TBD"
-      }
-    };
-
-    let currentLang = "uk";
-    let currentGame = "cs";
-    let currentBracketSize = 8;
-    let bracketType = "single";
-
-    function toggleLang() {
-      currentLang = currentLang === "uk" ? "en" : "uk";
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (i18n[currentLang][key]) {
-          el.textContent = i18n[currentLang][key];
-        }
-      });
-      renderBracket();
-    }
-
-    function switchGame(game) {
-      currentGame = game;
-      const body = document.body;
-      const icon = document.getElementById("game-icon");
-      const label = document.getElementById("active-game-label");
-      const btnCs = document.getElementById("btn-cs");
-      const btnDota = document.getElementById("btn-dota");
-
-      if (game === "cs") {
-        body.className = "theme-cs flex flex-col";
-        icon.className = "fa-solid fa-crosshairs text-3xl accent-color";
-        label.textContent = "CS2 Competitive";
-        btnCs.className = "px-4 py-1.5 rounded font-bold text-sm transition-all bg-orange-600 text-white shadow flex items-center gap-1.5";
-        btnDota.className = "px-4 py-1.5 rounded font-bold text-sm transition-all text-gray-400 hover:text-white flex items-center gap-1.5";
-      } else {
-        body.className = "theme-dota flex flex-col";
-        icon.className = "fa-solid fa-cube text-3xl accent-color";
-        label.textContent = "Dota 2 Captains Mode";
-        btnDota.className = "px-4 py-1.5 rounded font-bold text-sm transition-all bg-red-600 text-white shadow flex items-center gap-1.5";
-        btnCs.className = "px-4 py-1.5 rounded font-bold text-sm transition-all text-gray-400 hover:text-white flex items-center gap-1.5";
-      }
-
-      renderBracket();
-    }
-
-    function setBracketType(type) {
-      bracketType = type;
-      const btnSingle = document.getElementById("btn-single-elim");
-      const btnDouble = document.getElementById("btn-double-elim");
-
-      if (type === "single") {
-        btnSingle.className = "bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-200 border border-gray-700";
-        btnDouble.className = "bg-gray-900 px-3 py-1 rounded text-xs font-bold text-gray-500 border border-gray-800 hover:text-gray-300";
-      } else {
-        btnDouble.className = "bg-gray-800 px-3 py-1 rounded text-xs font-bold text-gray-200 border border-gray-700";
-        btnSingle.className = "bg-gray-900 px-3 py-1 rounded text-xs font-bold text-gray-500 border border-gray-800 hover:text-gray-300";
-      }
-
-      renderBracket();
-    }
-
-    function updateBracketSize(size) {
-      currentBracketSize = parseInt(size);
-      renderBracket();
-    }
+    let selectedMatchId = null;
 
     function renderBracket() {
       const container = document.getElementById("bracket-tree");
       container.innerHTML = "";
-      const tbdText = i18n[currentLang]["tbd"] || "TBD";
 
-      if (bracketType === "single") {
-        container.appendChild(createBracketSection("Upper Bracket", currentBracketSize, tbdText));
-      } else {
-        const upperSection = createBracketSection("Upper Bracket", currentBracketSize, tbdText);
-        const lowerSection = createBracketSection("Lower Bracket (Losers)", Math.floor(currentBracketSize / 2), tbdText);
-        
-        container.appendChild(upperSection);
-        const divider = document.createElement("hr");
-        divider.className = "border-gray-800 my-4";
-        container.appendChild(divider);
-        container.appendChild(lowerSection);
-      }
-    }
-
-    function createBracketSection(title, size, tbdText) {
-      const wrapper = document.createElement("div");
-      const secTitle = document.createElement("div");
-      secTitle.className = "text-sm font-bold uppercase text-orange-400 mb-4 tracking-wider";
-      secTitle.textContent = title;
-      wrapper.appendChild(secTitle);
-
-      const tree = document.createElement("div");
-      tree.className = "flex gap-8 justify-between py-2";
-
-      const roundsCount = Math.max(1, Math.log2(size));
-      let matchId = 1;
+      const roundsCount = Math.log2(currentBracketSize);
+      let matchNumber = 1;
 
       for (let r = 1; r <= roundsCount; r++) {
         const roundCol = document.createElement("div");
-        roundCol.className = "flex flex-col justify-around gap-4 flex-1";
-        const matchesInRound = Math.max(1, size / Math.pow(2, r));
-        
+        roundCol.className = "flex flex-col justify-around gap-4 flex-1 min-w-[180px]";
+
+        const matchesInRound = currentBracketSize / Math.pow(2, r);
         const roundHeader = document.createElement("div");
-        roundHeader.className = "text-center text-[11px] font-bold uppercase text-gray-500 mb-2";
-        roundHeader.textContent = r === roundsCount ? "Grand Final" : `Round ${r}`;
+        roundHeader.className = "text-center text-xs font-bold uppercase text-gray-500 mb-2";
+        roundHeader.textContent = r === roundsCount ? "Гранд-Фінал" : `Раунд ${r}`;
         roundCol.appendChild(roundHeader);
 
         for (let m = 0; m < matchesInRound; m++) {
+          const mId = `R${r}-M${m+1}`;
+          const mData = matchesData[mId] || { t1: "Очікується", t2: "Очікується", winner: null };
+
           const matchCard = document.createElement("div");
-          matchCard.className = "card-custom rounded-lg p-3 border border-gray-800 hover:border-orange-500/50 cursor-pointer transition";
-          
+          matchCard.className = `card-custom rounded-lg p-3 border border-gray-800 hover:border-orange-500/80 cursor-pointer transition ${mData.winner ? 'border-green-500/50' : ''}`;
+          matchCard.onclick = () => openMatchResultModal(mId, mData);
+
           matchCard.innerHTML = `
             <div class="text-[10px] text-gray-500 font-bold mb-1 flex justify-between">
-              <span>Match #${matchId++}</span>
-              <span class="text-gray-400">Bo3</span>
+              <span>Матч #${matchNumber++}</span>
+              <span class="text-orange-400 font-semibold">Bo3</span>
             </div>
             <div class="space-y-1">
-              <div class="flex justify-between items-center text-xs bg-gray-900/60 p-1.5 rounded border border-gray-800/60">
-                <span class="text-gray-400 italic">${tbdText}</span>
-                <span class="font-bold text-gray-600">-</span>
+              <div class="flex justify-between items-center text-xs p-1.5 rounded ${mData.winner === 1 ? 'bg-green-950/80 font-bold text-green-400' : 'bg-gray-900/60 text-gray-300'}">
+                <span class="truncate">${mData.t1}</span>
+                <span>${mData.winner === 1 ? '✓' : '-'}</span>
               </div>
-              <div class="flex justify-between items-center text-xs bg-gray-900/60 p-1.5 rounded border border-gray-800/60">
-                <span class="text-gray-400 italic">${tbdText}</span>
-                <span class="font-bold text-gray-600">-</span>
+              <div class="flex justify-between items-center text-xs p-1.5 rounded ${mData.winner === 2 ? 'bg-green-950/80 font-bold text-green-400' : 'bg-gray-900/60 text-gray-300'}">
+                <span class="truncate">${mData.t2}</span>
+                <span>${mData.winner === 2 ? '✓' : '-'}</span>
               </div>
             </div>
           `;
           roundCol.appendChild(matchCard);
         }
-        tree.appendChild(roundCol);
+        container.appendChild(roundCol);
       }
-      wrapper.appendChild(tree);
-      return wrapper;
+    }
+
+    function openMatchResultModal(mId, mData) {
+      selectedMatchId = mId;
+      document.getElementById("modal-match-header").textContent = `Результат (${mId})`;
+      document.getElementById("modal-t1-name").textContent = mData.t1;
+      document.getElementById("modal-t2-name").textContent = mData.t2;
+      document.getElementById("modal-match-result").classList.remove("hidden");
+    }
+
+    function setWinner(teamNum) {
+      if (!selectedMatchId) return;
+
+      if (!matchesData[selectedMatchId]) {
+        matchesData[selectedMatchId] = { t1: "Команда 1", t2: "Команда 2", winner: null };
+      }
+
+      matchesData[selectedMatchId].winner = teamNum;
+      const winningTeamName = teamNum === 1 ? matchesData[selectedMatchId].t1 : matchesData[selectedMatchId].t2;
+
+      // Auto advance to next round
+      const parts = selectedMatchId.split('-M');
+      const roundNum = parseInt(parts[0].replace('R', ''));
+      const matchNum = parseInt(parts[1]);
+
+      const nextRound = roundNum + 1;
+      const nextMatch = Math.ceil(matchNum / 2);
+      const nextMatchId = `R${nextRound}-M${nextMatch}`;
+
+      if (Math.pow(2, roundNum) < currentBracketSize) {
+        if (!matchesData[nextMatchId]) matchesData[nextMatchId] = { t1: "Очікується", t2: "Очікується", winner: null };
+        
+        if (matchNum % 2 !== 0) {
+          matchesData[nextMatchId].t1 = winningTeamName;
+        } else {
+          matchesData[nextMatchId].t2 = winningTeamName;
+        }
+      }
+
+      localStorage.setItem('tournament_matches', JSON.stringify(matchesData));
+      renderBracket();
+      closeModal('modal-match-result');
+    }
+
+    function setActiveBetMatch() {
+      if (!selectedMatchId) return;
+      const mData = matchesData[selectedMatchId] || { t1: "Team #1", t2: "Team #2" };
+      activeMatchForBets = mData;
+
+      document.getElementById("active-match-title").textContent = `${mData.t1} vs ${mData.t2}`;
+      document.getElementById("bet-team1-name").textContent = mData.t1;
+      document.getElementById("bet-team2-name").textContent = mData.t2;
+      closeModal('modal-match-result');
+    }
+
+    function autoBalanceTeams() {
+      const sampleTeams = ["Кошенята Сєрого", "Пані Тетяна Squad", "Пан Кавун Gaming", "Hesher Den Kings", "Лорі Esports", "Діана Team", "Пан Васян Stack", "Пані Ніка 5v5"];
+      
+      for (let i = 0; i < currentBracketSize / 2; i++) {
+        const mId = `R1-M${i+1}`;
+        matchesData[mId] = {
+          t1: sampleTeams[i*2] || `Team #${i*2+1}`,
+          t2: sampleTeams[i*2+1] || `Team #${i*2+2}`,
+          winner: null
+        };
+      }
+
+      localStorage.setItem('tournament_matches', JSON.stringify(matchesData));
+      renderBracket();
+      alert("Тестові команди успішно розподілені у перший раунд!");
+    }
+
+    function resetBracketData() {
+      matchesData = {};
+      localStorage.removeItem('tournament_matches');
+      renderBracket();
+    }
+
+    function updateBracketSize(val) {
+      currentBracketSize = parseInt(val);
+      renderBracket();
+    }
+
+    function setBracketType(type) {
+      bracketType = type;
+      renderBracket();
+    }
+
+    function switchGame(game) {
+      document.body.className = game === 'cs' ? 'theme-cs flex flex-col' : 'theme-dota flex flex-col';
+      document.getElementById('game-icon').className = game === 'cs' ? 'fa-solid fa-crosshairs text-3xl accent-color' : 'fa-solid fa-cube text-3xl accent-color';
+      document.getElementById('active-game-label').textContent = game === 'cs' ? 'CS2 Competitive' : 'Dota 2 Captains Mode';
+      renderBracket();
     }
 
     // MAP VETO SYSTEM LOGIC
@@ -870,7 +750,6 @@
       log.appendChild(entry);
 
       vetoState.turn = vetoState.turn === 1 ? 2 : 1;
-
       const remaining = csMaps.filter(m => !vetoState.banned.includes(m));
       const status = document.getElementById("veto-status");
 
@@ -891,24 +770,15 @@
       renderVetoMaps();
     }
 
-    // MODAL CONTROL
+    // MODAL CONTROLS
     function openObsModal() { document.getElementById("modal-obs").classList.remove("hidden"); }
     function openBotModal() { document.getElementById("modal-bot").classList.remove("hidden"); }
     function openLeaderboardModal() { document.getElementById("modal-leaderboard").classList.remove("hidden"); }
     function openStatsModal() { document.getElementById("modal-stats").classList.remove("hidden"); }
-    function openManualDraftModal() { 
-      renderManualTeams();
-      document.getElementById("modal-draft").classList.remove("hidden"); 
-    }
-    function openProfileModal() {
-      loadProfileToModal();
-      document.getElementById("modal-profile").classList.remove("hidden");
-    }
+    function openManualDraftModal() { document.getElementById("modal-draft").classList.remove("hidden"); }
+    function openProfileModal() { document.getElementById("modal-profile").classList.remove("hidden"); }
     function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
-
-    function toggleDropdown() {
-      document.getElementById("profile-dropdown").classList.toggle("hidden");
-    }
+    function toggleDropdown() { document.getElementById("profile-dropdown").classList.toggle("hidden"); }
 
     function copyToClipboard(inputId) {
       const input = document.getElementById(inputId);
@@ -916,136 +786,41 @@
       alert("Посилання скопійовано для OBS!");
     }
 
-    function renderManualTeams() {
-      const container = document.getElementById("manual-teams-container");
-      container.innerHTML = "";
-      const tbdText = i18n[currentLang]["tbd"] || "TBD";
+    function placeBet(teamNum) {
+      const input = document.getElementById(`bet-team${teamNum}-input`);
+      const val = parseInt(input.value);
+      if (!val || val <= 0) return alert("Введіть коректну суму балів!");
 
-      for (let i = 1; i <= currentBracketSize; i++) {
-        const teamCard = document.createElement("div");
-        teamCard.className = "bg-gray-900 p-3 rounded-lg border border-gray-800 space-y-2";
-        teamCard.innerHTML = `
-          <div class="flex justify-between items-center">
-            <input type="text" value="Team #${i}" class="bg-gray-950 text-xs font-bold text-white px-2 py-1 rounded border border-gray-700 w-2/3">
-            <span class="text-[10px] text-gray-500">Avg Elo: 0</span>
-          </div>
-          <div class="text-xs text-gray-500 italic p-2 bg-gray-950/50 rounded border border-dashed border-gray-800">
-            ${tbdText} (No players assigned)
-          </div>
-        `;
-        container.appendChild(teamCard);
-      }
+      const poolElem = document.getElementById(`bet-team${teamNum}-pool`);
+      const currentPool = parseInt(poolElem.textContent) || 0;
+      poolElem.textContent = currentPool + val;
+      input.value = "";
+      alert(`Ставку на суму ${val} балів прийнято!`);
     }
 
-    function sortRegisteredByElo() { alert("Гравців відсортовано за рівнем Elo/MMR!"); }
-    function autoBalanceTeams() { alert("Автобаланс виконано!"); }
-    function importMatchData() { alert("Дані завантажено."); }
-
+    function toggleLang() { alert("Мову переключено!"); }
     function redirectToTwitchAuth() {
-      if (TWITCH_CLIENT_ID === "YOUR_TWITCH_CLIENT_ID") {
-        const mockUser = {
-          username: "hesherUA",
-          role: "streamer",
-          tourneysPlayed: 0,
-          winRate: 0,
-          tourneysHosted: 1,
-          faceit: "",
-          steam: "",
-          cshunter: "",
-          telegram: ""
-        };
-        localStorage.setItem("twitch_user_session", JSON.stringify(mockUser));
-        renderUserLoggedInUI(mockUser);
-        return;
-      }
-
-      const scope = encodeURIComponent("user:read:email");
-      const twitchUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${scope}`;
-      window.location.href = twitchUrl;
-    }
-
-    function renderUserLoggedInUI(user) {
-      const authSection = document.getElementById("auth-section");
-      const roleLabel = user.role === "streamer" ? "Стрімер / Організатор" : "Глядач / Учасник";
-
-      document.getElementById("dropdown-user-name").textContent = user.username;
-      document.getElementById("dropdown-user-role").textContent = roleLabel;
-
-      authSection.innerHTML = `
-        <div onclick="toggleDropdown()" class="flex items-center gap-3 bg-gray-900 p-1.5 px-3 rounded-lg border border-gray-800 cursor-pointer hover:border-gray-700 transition">
-          <div class="w-8 h-8 rounded-full accent-bg flex items-center justify-center font-bold text-white uppercase text-sm border border-orange-500 overflow-hidden">
-            ${user.avatar ? `<img src="${user.avatar}" class="w-full h-full object-cover">` : user.username.charAt(0)}
-          </div>
-          <div class="text-left hidden sm:block">
-            <div class="text-xs font-bold text-white flex items-center gap-1">
-              ${user.username}
-              <i class="fa-brands fa-twitch text-purple-400 text-[10px]"></i>
-            </div>
-            <div class="text-[10px] text-orange-400 font-semibold uppercase">${roleLabel}</div>
-          </div>
-          <i class="fa-solid fa-chevron-down text-xs text-gray-500 ml-1"></i>
-        </div>
-      `;
-    }
-
-    function loadProfileToModal() {
-      const savedUser = localStorage.getItem("twitch_user_session");
-      if (!savedUser) return;
-      const user = JSON.parse(savedUser);
-
-      document.getElementById("profile-modal-username").textContent = user.username;
-      document.getElementById("profile-modal-avatar").innerHTML = user.avatar ? `<img src="${user.avatar}" class="w-full h-full object-cover rounded-full">` : user.username.charAt(0);
-      document.getElementById("profile-modal-role-badge").textContent = user.role === "streamer" ? "Стрімер / Організатор" : "Глядач / Учасник";
-
-      document.getElementById("stat-tourneys-played").textContent = user.tourneysPlayed || 0;
-      document.getElementById("stat-win-rate").textContent = (user.winRate || 0) + "%";
-      document.getElementById("stat-tourneys-hosted").textContent = user.tourneysHosted || 0;
-
-      document.getElementById("prof-faceit").value = user.faceit || "";
-      document.getElementById("prof-steam").value = user.steam || "";
-      document.getElementById("prof-cshunter").value = user.cshunter || "";
-      document.getElementById("prof-tg").value = user.telegram || "";
-    }
-
-    function saveProfileSettings(e) {
-      e.preventDefault();
-      const savedUser = localStorage.getItem("twitch_user_session");
-      if (!savedUser) return;
-
-      const user = JSON.parse(savedUser);
-      user.faceit = document.getElementById("prof-faceit").value.trim();
-      user.steam = document.getElementById("prof-steam").value.trim();
-      user.cshunter = document.getElementById("prof-cshunter").value.trim();
-      user.telegram = document.getElementById("prof-tg").value.trim();
-
-      localStorage.setItem("twitch_user_session", JSON.stringify(user));
-      alert("Налаштування профілю успішно збережено!");
-      closeModal("modal-profile");
-    }
-
-    function handleLogout() {
-      localStorage.removeItem("twitch_user_session");
-      document.getElementById("auth-section").innerHTML = `
-        <button onclick="redirectToTwitchAuth()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 shadow-lg transition">
-          <i class="fa-brands fa-twitch text-lg"></i>
-          <span data-i18n="login">Увійти через Twitch</span>
-        </button>
-      `;
+      const mockUser = { username: "hesherUA", role: "streamer" };
+      localStorage.setItem("twitch_user_session", JSON.stringify(mockUser));
+      location.reload();
     }
 
     function checkSavedSession() {
       const savedUser = localStorage.getItem("twitch_user_session");
       if (savedUser) {
-        try {
-          const userSession = JSON.parse(savedUser);
-          renderUserLoggedInUI(userSession);
-        } catch (err) {
-          localStorage.removeItem("twitch_user_session");
-        }
+        const user = JSON.parse(savedUser);
+        document.getElementById("auth-section").innerHTML = `
+          <div onclick="toggleDropdown()" class="flex items-center gap-2 bg-gray-900 p-1.5 px-3 rounded-lg border border-gray-800 cursor-pointer">
+            <div class="w-7 h-7 rounded-full accent-bg flex items-center justify-center font-bold text-white uppercase text-xs">
+              ${user.username.charAt(0)}
+            </div>
+            <span class="text-xs font-bold text-white">${user.username}</span>
+          </div>
+        `;
       }
     }
 
-    // INITIALIZATION
+    // INIT
     checkSavedSession();
     renderBracket();
   </script>
